@@ -1,10 +1,8 @@
 package tests;
 
-import com.sun.org.apache.xerces.internal.impl.xpath.regex.Match;
 import core.BaseTest;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import io.restassured.specification.RequestSpecification;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -42,9 +40,9 @@ public class TesteAPI extends BaseTest {
                 .body("nome", Matchers.is("Paulo Quintino"))
                 .extract().path("token");
 
-        System.out.println("===================================");
+        System.out.println("=========================================================================================================");
         System.out.println(token);
-        System.out.println("===================================");
+        System.out.println("=========================================================================================================");
     }
 
 
@@ -58,16 +56,16 @@ public class TesteAPI extends BaseTest {
         body.put("nome", nomeConta);
 
         contaId = RestAssured.given()
-                    .header("Authorization", "JWT " + token)
-                    .body(body)
-                    .log().all()
+                .header("Authorization", "JWT " + token)
+                .body(body)
+                .log().all()
                 .when()
-                    .post("/contas")
+                .post("/contas")
                 .then()
-                    .log().all()
-                    .statusCode(201)
-                    .body("nome", Matchers.is(nomeConta))
-                    .extract().path("id");
+                .log().all()
+                .statusCode(201)
+                .body("nome", Matchers.is(nomeConta))
+                .extract().path("id");
 
         System.out.println("===================================");
         System.out.println(contaId);
@@ -75,20 +73,42 @@ public class TesteAPI extends BaseTest {
     }
 
     @Test
-    public void deveRetornarContaCriada(){
+    public void deveRetornarContaCriada() {
 
         RestAssured.given()
-                    .header("Authorization", "JWT " + token)
+                .header("Authorization", "JWT " + token)
                 .when()
-                    .log().all()
-                    .get("/contas/"+contaId)
+                .log().all()
+                .get("/contas/" + contaId)
                 .then()
-                    .statusCode(200)
-                    .body("id", Matchers.is(contaId))
-                    .body("nome", Matchers.is(nomeConta))
-                    .body("visivel", Matchers.equalTo(true));
+                .statusCode(200)
+                .body("id", Matchers.is(contaId))
+                .body("nome", Matchers.is(nomeConta))
+                .body("visivel", Matchers.equalTo(true));
     }
 
+    @Test
+    public void deveRetornarTodasAsContas() {
+        Response response = RestAssured.given()
+                .header("Authorization", "JWT " + token)
+                .when()
+                .log().all()
+                .get("/contas");
+
+        int tamanho = response.body().jsonPath().getList("").size();
+
+        System.out.println("==============================");
+        System.out.println("TAMANHO DA LISTAGEM " + tamanho);
+        System.out.println("==============================");
+
+        response.then()
+                .statusCode(200)
+                .log().all()
+                .body("id", Matchers.hasSize(Matchers.greaterThan(0)))
+                .body("id", Matchers.notNullValue())
+                .body("nome", Matchers.hasItem("Conta 5"))
+                .body("", Matchers.hasSize(tamanho));
+    }
 
 
 }
